@@ -3,25 +3,33 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB; // Tambahkan ini
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
      * Run the migrations.
      */
-   public function up(): void
-{
-    Schema::table('transaksis', function (Blueprint $table) {
-        // Mengubah tanggal_pinjam tetap bisa pakai cara biasa
-        $table->date('tanggal_pinjam')->nullable()->change();
-    });
+    public function up(): void
+    {
+        // 1. Perubahan kolom biasa tetap pakai Schema Builder
+        Schema::table('transaksis', function (Blueprint $table) {
+            $table->date('tanggal_pinjam')->nullable()->change();
+        });
 
-    // Khusus untuk 'status', kita gunakan SQL manual agar Postgres tidak bingung
-    DB::statement('ALTER TABLE transaksis ALTER COLUMN status TYPE VARCHAR(255)');
-    DB::statement("ALTER TABLE transaksis ADD CONSTRAINT transaksis_status_check CHECK (status IN ('menunggu', 'dipinjam', 'kembali', 'ditolak'))");
-    DB::statement("ALTER TABLE transaksis ALTER COLUMN status SET DEFAULT 'menunggu'");
-}
+        // 2. Gunakan SQL mentah untuk menangani rewelnya PostgreSQL
+        // Kita hapus dulu gemboknya (constraint) kalau sudah terlanjur ada
+        DB::statement('ALTER TABLE transaksis DROP CONSTRAINT IF EXISTS transaksis_status_check');
+
+        // Pastikan tipe data kolomnya benar
+        DB::statement('ALTER TABLE transaksis ALTER COLUMN status TYPE VARCHAR(255)');
+        
+        // Pasang gembok (constraint) baru
+        DB::statement("ALTER TABLE transaksis ADD CONSTRAINT transaksis_status_check CHECK (status IN ('menunggu', 'dipinjam', 'kembali', 'ditolak'))");
+        
+        // Set nilai default
+        DB::statement("ALTER TABLE transaksis ALTER COLUMN status SET DEFAULT 'menunggu'");
+    }
 
     /**
      * Reverse the migrations.
@@ -29,8 +37,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transaksis', function (Blueprint $table) {
-            // Untuk rollback, hapus constraint-nya saja
-            DB::statement('ALTER TABLE transaksis DROP CONSTRAINT IF EXISTS transaksis_status_check');
+            // Balikkan tanggal_pinjam jadi tidak nullable jika diperlukan
+            $table->date('tanggal_pinjam')->nullable(false)->change();
         });
+
+        // Hapus constraint saat rollback
+        DB::statement('ALTER TABLE transaksis DROP CONSTRAINT IF EXISTS transaksis_status_check');
     }
 };
