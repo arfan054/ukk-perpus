@@ -18,7 +18,7 @@ return new class extends Migration
         });
 
         // 2. Gunakan SQL mentah untuk menangani rewelnya PostgreSQL
-        // Kita hapus dulu gemboknya (constraint) kalau sudah terlanjur ada
+        // Kita hapus dulu gemboknya (constraint) kalau sudah terlanjur ada untuk mencegah error Duplicate Object
         DB::statement('ALTER TABLE transaksis DROP CONSTRAINT IF EXISTS transaksis_status_check');
 
         // Pastikan tipe data kolomnya benar
@@ -37,7 +37,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transaksis', function (Blueprint $table) {
-            // Balikkan tanggal_pinjam jadi tidak nullable jika diperlukan
             $table->date('tanggal_pinjam')->nullable(false)->change();
         });
 
