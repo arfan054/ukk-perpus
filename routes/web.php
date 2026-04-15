@@ -9,35 +9,44 @@ use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
-| REDIRECT AWAL
+| ROOT
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
     if (Auth::check()) {
         $user = Auth::user();
+
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
+
         if ($user->role === 'anggota') {
             return redirect()->route('anggota.dashboard');
         }
     }
-    return redirect('/login');
+
+    return redirect()->route('login');
 });
 
 /*
 |--------------------------------------------------------------------------
-| GUEST AREA (Login)
+| GUEST (BELUM LOGIN)
 |--------------------------------------------------------------------------
 */
 Route::middleware('guest')->group(function () {
+
+    // LOGIN
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+
+    // REGISTER
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 });
 
 /*
 |--------------------------------------------------------------------------
-| AUTH AREA (Harus Login)
+| AUTH (SUDAH LOGIN)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
@@ -46,15 +55,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['check.status'])->group(function () {
 
-        /* |------------------------------------------------------------------
-        | 🔥 ADMIN AREA 
-        |------------------------------------------------------------------
+        /*
+        | ADMIN
         */
         Route::middleware(['checkRole:admin'])->prefix('admin')->group(function () {
-            
+
             Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-            
-            // Manajemen Buku
+
             Route::controller(BukuController::class)->group(function () {
                 Route::get('/buku', 'index')->name('admin.buku');
                 Route::post('/buku/store', 'store')->name('admin.buku.store');
@@ -63,7 +70,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/buku/delete/{id}', 'destroy')->name('admin.buku.delete');
             });
 
-            // Manajemen Anggota
             Route::controller(AnggotaController::class)->group(function () {
                 Route::get('/anggota', 'index')->name('admin.anggota');
                 Route::post('/anggota/store', 'store')->name('admin.anggota.store');
@@ -72,38 +78,26 @@ Route::middleware(['auth'])->group(function () {
                 Route::delete('/anggota/delete/{id}', 'destroy')->name('admin.anggota.destroy');
             });
 
-            // Manajemen Transaksi & ACC
             Route::controller(AdminController::class)->group(function () {
                 Route::get('/transaksi', 'transaksi')->name('admin.transaksi');
-                // ROUTE BARU: Untuk Admin Klik Setujui/ACC Pinjaman
                 Route::post('/transaksi/acc/{id}', 'accPinjaman')->name('admin.acc');
             });
         });
 
-        /* |------------------------------------------------------------------
-        | 🔥 ANGGOTA AREA 
-        |------------------------------------------------------------------
+        /*
+        | ANGGOTA
         */
         Route::middleware(['checkRole:anggota'])->prefix('anggota')->group(function () {
-            
+
             Route::get('/dashboard', [BukuController::class, 'anggota'])->name('anggota.dashboard');
             Route::get('/buku', [BukuController::class, 'anggota'])->name('anggota.buku');
             Route::get('/profil', [AnggotaController::class, 'index'])->name('anggota.index');
 
-            // Proses Pengajuan Pinjam (Status Menunggu)
             Route::post('/pinjam', [AdminController::class, 'pinjamStore'])->name('pinjam.store');
             Route::post('/admin/transaksi/kembali/{id}', [AdminController::class, 'kembaliBuku'])->name('admin.kembali');
-            Route::get('pengembalian', [AnggotaController::class, 'pengembalian'])
-            ->name('anggota.pengembalian');
+
+            Route::get('/pengembalian', [AnggotaController::class, 'pengembalian'])
+                ->name('anggota.pengembalian');
         });
     });
-    Route::middleware('guest')->group(function () {
-    // login
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-
-    // register
-    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
-});
 });

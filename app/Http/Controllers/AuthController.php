@@ -16,13 +16,11 @@ class AuthController extends Controller
     |--------------------------------------------------
     */
 
-    // tampil halaman login
     public function showLogin()
     {
         return view('login');
     }
 
-    // proses login
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -31,6 +29,8 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
+
+            $request->session()->regenerate(); // 🔥 penting biar aman
 
             $user = Auth::user();
 
@@ -44,11 +44,15 @@ class AuthController extends Controller
             }
 
             // 🔥 REDIRECT ROLE
-            return match ($user->role) {
-                'admin' => redirect()->route('admin.dashboard'),
-                'anggota' => redirect()->route('anggota.dashboard'),
-                default => redirect('/login'),
-            };
+            if ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            if ($user->role === 'anggota') {
+                return redirect()->route('anggota.dashboard');
+            }
+
+            return redirect('/login');
         }
 
         return back()->withErrors([
@@ -62,13 +66,11 @@ class AuthController extends Controller
     |--------------------------------------------------
     */
 
-    // tampil halaman register
     public function showRegister()
     {
-        return view('register'); // pastikan file: resources/views/register.blade.php
+        return view('register');
     }
 
-    // proses register
     public function register(Request $request)
     {
         $request->validate([
@@ -77,16 +79,14 @@ class AuthController extends Controller
             'password' => 'required|min:5|confirmed',
         ]);
 
-        // simpan ke tabel users
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'anggota', // default anggota
-            'status' => 'aktif'  // langsung aktif
+            'role' => 'anggota',
+            'status' => 'aktif'
         ]);
 
-        // simpan ke tabel anggota (opsional tapi kamu pakai)
         Anggota::create([
             'user_id' => $user->id,
             'nama' => $request->name,
