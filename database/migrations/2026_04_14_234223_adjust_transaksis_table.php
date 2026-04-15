@@ -10,23 +10,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::table('transaksis', function (Blueprint $table) {
-            // Mengubah tanggal_pinjam jadi nullable tetap aman
-            $table->date('tanggal_pinjam')->nullable()->change();
-        });
+   public function up(): void
+{
+    Schema::table('transaksis', function (Blueprint $table) {
+        // Mengubah tanggal_pinjam tetap bisa pakai cara biasa
+        $table->date('tanggal_pinjam')->nullable()->change();
+    });
 
-        // Khusus untuk bagian enum/status di PostgreSQL, gunakan DB::statement
-        // 1. Ubah tipe data menjadi string (varchar) terlebih dahulu
-        DB::statement('ALTER TABLE transaksis ALTER COLUMN status TYPE VARCHAR(255)');
-        
-        // 2. Tambahkan Check Constraint secara manual
-        DB::statement("ALTER TABLE transaksis ADD CONSTRAINT transaksis_status_check CHECK (status IN ('menunggu', 'dipinjam', 'kembali', 'ditolak'))");
-        
-        // 3. Set default value
-        DB::statement("ALTER TABLE transaksis ALTER COLUMN status SET DEFAULT 'menunggu'");
-    }
+    // Khusus untuk 'status', kita gunakan SQL manual agar Postgres tidak bingung
+    DB::statement('ALTER TABLE transaksis ALTER COLUMN status TYPE VARCHAR(255)');
+    DB::statement("ALTER TABLE transaksis ADD CONSTRAINT transaksis_status_check CHECK (status IN ('menunggu', 'dipinjam', 'kembali', 'ditolak'))");
+    DB::statement("ALTER TABLE transaksis ALTER COLUMN status SET DEFAULT 'menunggu'");
+}
 
     /**
      * Reverse the migrations.
