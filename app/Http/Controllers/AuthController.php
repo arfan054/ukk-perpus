@@ -87,10 +87,12 @@ class AuthController extends Controller
             'status' => 'aktif'
         ]);
 
-        Anggota::create([
-            'user_id' => $user->id,
-            'nama' => $request->name,
-        ]);
+      Anggota::create([
+    'user_id' => $user->id,
+    'nama' => $request->name,
+    'email' => $request->email,
+    'status' => 'aktif', // 🔥 TAMBAH INI
+]);
 
         return redirect()->route('login')->with('success', 'Pendaftaran berhasil! Silakan login.');
     }
