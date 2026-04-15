@@ -133,7 +133,11 @@
     </div>
 
     <button type="submit" class="btn-login">Login</button>
+    
 </form>
+<a href="{{ route('register') }}" class="forgot-link">
+    Belum punya akun? Daftar
+</a>
 
             <a href="#" class="forgot-link">Forgot Password?</a>
         </div>

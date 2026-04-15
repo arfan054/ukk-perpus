@@ -97,4 +97,13 @@ Route::middleware(['auth'])->group(function () {
             ->name('anggota.pengembalian');
         });
     });
+    Route::middleware('guest')->group(function () {
+    // login
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+
+    // register
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+});
 });
