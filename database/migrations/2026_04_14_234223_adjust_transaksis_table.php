@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB; // Tambahkan ini
 
 return new class extends Migration
 {
@@ -10,13 +11,22 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::table('transaksis', function (Blueprint $table) {
-        // Mengubah tanggal_pinjam jadi nullable dan set default status
-        $table->date('tanggal_pinjam')->nullable()->change();
-        $table->enum('status', ['menunggu', 'dipinjam', 'kembali', 'ditolak'])->default('menunggu')->change();
-    });
-}
+    {
+        Schema::table('transaksis', function (Blueprint $table) {
+            // Mengubah tanggal_pinjam jadi nullable tetap aman
+            $table->date('tanggal_pinjam')->nullable()->change();
+        });
+
+        // Khusus untuk bagian enum/status di PostgreSQL, gunakan DB::statement
+        // 1. Ubah tipe data menjadi string (varchar) terlebih dahulu
+        DB::statement('ALTER TABLE transaksis ALTER COLUMN status TYPE VARCHAR(255)');
+        
+        // 2. Tambahkan Check Constraint secara manual
+        DB::statement("ALTER TABLE transaksis ADD CONSTRAINT transaksis_status_check CHECK (status IN ('menunggu', 'dipinjam', 'kembali', 'ditolak'))");
+        
+        // 3. Set default value
+        DB::statement("ALTER TABLE transaksis ALTER COLUMN status SET DEFAULT 'menunggu'");
+    }
 
     /**
      * Reverse the migrations.
@@ -24,7 +34,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transaksis', function (Blueprint $table) {
-            //
+            // Untuk rollback, hapus constraint-nya saja
+            DB::statement('ALTER TABLE transaksis DROP CONSTRAINT IF EXISTS transaksis_status_check');
         });
     }
 };
