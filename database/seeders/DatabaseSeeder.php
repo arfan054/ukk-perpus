@@ -8,12 +8,10 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
+    
     public function run(): void
     {
-        // 1. Membuat Akun Admin
+        
         User::create([
             'name' => 'Administrator',
             'email' => 'admin@gmail.com',
@@ -21,7 +19,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        // 2. Membuat Akun Anggota
+        
         User::create([
             'name' => 'Anggota Biasa',
             'email' => 'anggota@gmail.com',

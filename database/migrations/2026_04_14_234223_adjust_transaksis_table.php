@@ -7,12 +7,10 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+    
     public function up(): void
     {
-        // 1. Perubahan kolom biasa tetap pakai Schema Builder
+        
         Schema::table('transaksis', function (Blueprint $table) {
             $table->date('tanggal_pinjam')->nullable()->change();
         });
@@ -31,9 +29,7 @@ return new class extends Migration
         DB::statement("ALTER TABLE transaksis ALTER COLUMN status SET DEFAULT 'menunggu'");
     }
 
-    /**
-     * Reverse the migrations.
-     */
+    
     public function down(): void
     {
         Schema::table('transaksis', function (Blueprint $table) {
